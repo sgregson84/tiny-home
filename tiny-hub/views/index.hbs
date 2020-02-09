@@ -1,0 +1,17 @@
+<h1>{{title}}</h1>
+<p>Welcome to {{title}}</p>
+<p>Version: {{version}}</p>
+
+
+<table >
+    <thead >
+        <td>Devices</td><td>Status</td><td>State</td>
+    </thead>
+    <tbody>
+        {{#each devices}}
+        <tr> 
+            <td>{{name}}</td><td>{{status}}</td><td>{{state}}</td>
+        </tr>
+        {{/each}}
+    </tbody>
+</table>
