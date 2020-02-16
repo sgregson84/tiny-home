@@ -1,42 +1,88 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const http = require('http');
+const fs = require('fs');
+const hostname = '127.0.0.1';
+const port = 3000;
+const path = require('path'),  
+      filePath = path.join(__dirname, 'index.html');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var deviceRouter = require('./routes/devices');
-var app = express();
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  res.setHeader('Content-Type', 'text/html');
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+  fs.readFile(filePath,function(error,data){
+    if(error){
+      res.writeHead(404);
+      res.write('Whoops! File not found!');
+    }else{
+      res.write(data);
+    }
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-app.use('/devices', deviceRouter); 
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+  console.log('New connection');
+  
+  res.end();
+  });
 });
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+server.listen(port, hostname, () => {
+  console.log(`Tiny Hub Server running at http://${hostname}:${port}/`);
 });
 
-module.exports = app;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*const http = require('http');
+const fs = require('fs');
+const hostname = '127.0.0.1';
+const port = 3000;
+
+let handleRequest = (request, response) => {
+  response.writeHead(200, {
+      'Content-Type': 'text/html'
+  });
+  fs.readFile('./index.html', null, function (error, data) {
+      if (error) {
+          response.writeHead(404);
+          respone.write('Whoops! File not found!');
+      } else {
+          response.write(data);
+      }
+      response.end();
+  });
+};
+
+const server = http.createServer(handleRequest).listen(port);
+
+/*var userCount = 0;
+
+const server = http.createServer((req, res) => {
+  res.statusCode = 200;
+  userCount++;
+  res.setHeader('Content-Type', 'text/plain');
+  res.write('Hello World');
+  console.log('New connection, '+userCount+'');
+  res.write('Hello!\n');
+  res.write('We have had '+userCount+' visits!\n');
+  res.end();
+  
+});
+
+
+
+
+server.listen(port, hostname, () => {
+  console.log(`Tiny Hub Server running at http://${hostname}:${port}/`);
+});
+*/
