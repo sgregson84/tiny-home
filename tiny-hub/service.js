@@ -37,7 +37,8 @@ app.get('/devices', (req, res) => {
 }
 );
 
-/***
+
+/**
  * Process the device POST on http://[host]:[port]/devices
  */
 app.post('/devices', (req, res) => {

@@ -4,6 +4,7 @@ const hostname = '192.168.1.199';
 const port = 3000;
 const path = require('path'),  
       filePath = path.join(__dirname, 'index.html');
+
 const express = require('express');
 const app = express();
 const DEVICE_PATH  = '/devices'; 
@@ -15,6 +16,11 @@ var garageDoor = {
 
 
 /*const server = http.createServer((req, res) => {
+
+
+
+const server = http.createServer((req, res) => {
+
   res.statusCode = 200;
   res.setHeader('Content-Type', 'text/html');
 
@@ -30,6 +36,7 @@ var garageDoor = {
   
   res.end();
   });
+
 });
 */
 
@@ -132,3 +139,10 @@ server.listen(port, hostname, () => {
   console.log(`Tiny Hub Server running at http://${hostname}:${port}/`);
 });
 */
+
+});
+
+server.listen(port, hostname, () => {
+  console.log(`Tiny Hub Server running at http://${hostname}:${port}/`);
+});
+
