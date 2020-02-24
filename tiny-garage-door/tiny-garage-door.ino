@@ -18,7 +18,7 @@
 #include <WiFi101.h>
 #include <Wire.h> //For I2C communication with sensor
 #include "BMA250.h" //For interfacing with the accel.sensor
-//#include "tinyGarageDoor.h"
+#include "tinyGarageDoor.h"
 
 // Accelerometer sensor variables for the sensor and its values
 BMA250 accel_sensor;
@@ -32,15 +32,22 @@ double temp;
  #define SerialMonitorInterface Serial
 #endif
 
-
+WiFiClient client;
 
 char ssid[] = "padre";  //  your network SSID (name)
 char wifiPassword[] = "fortknox";  // your network password
+char server[] = "192.168.1.199";
+int port = 3000;
+int doorAxisValue;
+int lastDoorAxisValue;
+int percentOfFullTravel;
+int doorMotion;
+char * doorState;
 
 void setup() {
 
   //WIFI Adapter setup
-  SerialMonitorInterface.begin(9600);
+  SerialMonitorInterface.begin(BAUD_RATE_115200);
   WiFi.setPins(8, 2, A3, -1); // VERY IMPORTANT FOR TINYDUINO
   while(!SerialMonitorInterface);
 
@@ -88,13 +95,94 @@ void loop()
   }
   
   else { // if we have correct sensor readings: 
-    showSerial();                 //Print to Serial Monitor or Plotter
+    
+    char data[200];
+    
+    
+    SerialMonitorInterface.println("\nStarting connection to server...");
+    // if you get a connection, report back via serial:
+    if (client.connect(server, port)) {
+      SerialMonitorInterface.println("\nconnected");
+
+      
+        // Report the accelerometer axis as the door position
+
+    SerialMonitorInterface.print("Door: ");
+
+    // Check the door state on the axis
+    doorAxisValue = accel_sensor.DOOR_TILT_AXIS * BOARD_ORIENTATION;
+
+
+    if (doorAxisValue > CLOSED_UPPER_THRESHOLD && doorAxisValue < OPEN_LOWER_THRESHOLD) {
+    // In the middle
+      doorMotion = doorAxisValue - lastDoorAxisValue; 
+      if ( doorMotion> 0) {
+        percentOfFullTravel = FULL_TRAVEL / (OPEN_LOWER_THRESHOLD - doorAxisValue);
+        doorState = OPENING_STATE;
+      
+      } else {
+        percentOfFullTravel =  FULL_TRAVEL / (doorAxisValue - CLOSED_UPPER_THRESHOLD);
+        doorState = CLOSING_STATE;
+      }
+
+     
+    SerialMonitorInterface.print(doorState);
+    SerialMonitorInterface.print("(");
+    SerialMonitorInterface.print(percentOfFullTravel);
+    SerialMonitorInterface.println("%)");
+
+    } else {
+      if (doorAxisValue >= OPEN_LOWER_THRESHOLD) {
+        // Fully open
+        doorState = OPEN_STATE;
+      }
+
+    if (doorAxisValue <= CLOSED_UPPER_THRESHOLD) {
+      // Fully closed
+      doorState = CLOSED_STATE;
+    }
+    SerialMonitorInterface.println(doorState);
+  }
+
+  // Save the last
+  lastDoorAxisValue = doorAxisValue;
+
+  delay(500);  
+        
+  sprintf(data, "{\"id\":\"testid\",\"Lisa\":\"Garage Door\",\"State\":\"%s\"}",doorState);
+  SerialMonitorInterface.println(data);
+  
+  client.println("POST /devices HTTP/1.1");
+  client.println("content-type: application/json");
+  client.print("content-length: ");
+  client.println(strlen(data));
+  client.print("Host: ");
+  client.println(server);
+  client.println("Connection: close");
+  client.println();
+  client.println(data);
+      
+  delay(2000);
+      
+  }
+  else
+    SerialMonitorInterface.println("not connected");
+    
   }
 
   // The BMA250 can only poll new sensor values every 64ms, so this delay
   // will ensure that we can continue to read values
   delay(250);
   // ***Without the delay, there would not be any sensor output*** 
+
+  // if the server's disconnected, stop the client:
+  if (!client.connected()) {
+    SerialMonitorInterface.println();
+    SerialMonitorInterface.println("disconnecting from server.");
+    client.stop();
+  }
+
+  
 }
   
 
