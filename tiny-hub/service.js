@@ -1,4 +1,3 @@
-
 const express = require('express');
 const app = express();
 const port = 3000;
@@ -37,6 +36,7 @@ app.get('/devices', (req, res) => {
     
 }
 );
+
 
 /**
  * Process the device POST on http://[host]:[port]/devices
